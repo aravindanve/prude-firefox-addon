@@ -65,12 +65,12 @@ function isBlockerEnabled() {
 }
 
 function enableBlocker() {
-    blockerConf = true;
+    blockerConf._enabled = true;
     return isBlockerEnabled();
 }
 
 function disableBlocker() {
-    blockerConf = false;
+    blockerConf._enabled = false;
     return isBlockerEnabled();
 }
 
