@@ -29,7 +29,7 @@ var wGUID = {
 };
 
 // get or set window id
-var GUID = wGUID(unsafeWindow);
+var GUID = wGUID.fetch(unsafeWindow);
 
 // check if in iframe
 var inFrame = false,  
@@ -50,50 +50,73 @@ try {
     topWindowAccess = false;
 }
 
-// blocker
-function Blocker() {}
+// begin
 
-Blocker.prototype = {
-    GUID: null,
-    inFrame: false,
-    addToStack: function (popup) {
-        self.port.emit('blocked', popup);
-    }
+var blockerInfo = {
+    GUID: GUID,
+    inFrame: inFrame
+};
+var blockerConf = {
+    _enabled: true
 };
 
-var blocker = null;
-
 function isBlockerEnabled() {
-    return (unsafeWindow.open._blocker instanceof Blocker);
+    return blockerConf._enabled === true;
 }
 
 function enableBlocker() {
-    if (null == blocker) return null;
-    unsafeWindow.open._blocker = blocker;
+    blockerConf = true;
     return isBlockerEnabled();
 }
 
 function disableBlocker() {
-    if (null == blocker) return null;
-    unsafeWindow.open._blocker = false;
+    blockerConf = false;
     return isBlockerEnabled();
 }
 
+function addPopupToStack(args) {
+    self.port.emit('blocked', args);
+}
+
+var finalOpen = function (context, original) {
+    return function (url, name, opts) {
+        context.open._blocker = context.open._blocker || {_enabled: true};
+        if (blockerConf._enabled === false) {
+            return original.call(context, url, name, opts);
+        } else {
+            addPopupToStack({url, name, opts});
+            return null;
+        }
+    }
+}(unsafeWindow, window.open);
+
 // configure blocker
 self.port.on('configure', function (options) {
-    var _blocker = new Blocker();
-    _blocker.GUID = GUID;
-    _blocker.inFrame = inFrame;
-    blocker = cloneInto(_blocker, unsafeWindow, true);
+
+    // get temp stack
+    var tempStack = [];
+
+    if (('object' === typeof unsafeWindow.open._tempStack) &&
+        ('undefined' !== typeof unsafeWindow.open._tempStack.length)) {
+        for (var i = 0; i < unsafeWindow.open._tempStack.length; i++) {
+            tempStack.push({ 
+                'url': unsafeWindow.open._tempStack[i].url, 
+                'name': unsafeWindow.open._tempStack[i].name, 
+                'opts': unsafeWindow.open._tempStack[i].opts
+            });
+        }
+    }
+
+    // register blocker
     self.port.emit('register', {
-        GUID: blocker.GUID, 
-        inFrame: blocker.inFrame
+        GUID: GUID, 
+        inFrame: inFrame
     });
-    unsafeWindow.open._blocker = blocker;
-    // empty tempStack
-    var tempStack = unsafeWindow.open._tempStack;
-    delete unsafeWindow.open._tempStack;
-    // handle popups from temp stack
+
+    // export modified window.open
+    unsafeWindow.open = exportFunction(finalOpen, unsafeWindow);
+
+    // evaluate temp stack
     for (var i = 0; i < tempStack.length; i++) {
         unsafeWindow.open.call(unsafeWindow, 
             tempStack[i].url, tempStack[i].name, tempStack[i].opts);
@@ -108,7 +131,6 @@ self.port.on('update', function (options) {
     } else {
         result = disableBlocker();
     }
-    // console.log('blocker status: ' + result);
 
     // update control
     if (!inFrame && (result != null)) {
@@ -188,7 +210,7 @@ if (!inFrame) {
         var ch;
 
         if (prudeControl) {
-            for (ch = prudeControl.firstChild; ch; ch.nextSibling) {
+            for (ch = prudeControl.firstChild; ch; ch = ch.nextSibling) {
                 if (!ch.className) continue;
                 if (hasClass(ch, 'count-bubble')) {
                     countBubble = ch;
@@ -226,7 +248,24 @@ if (!inFrame) {
     })(document);
 }
 
+// IMPORTANT, set to false in production mode
+var debug = true;
 
+if (debug) {
+    // expose stack
+    function getPrude() {
+        self.port.emit('_all');
+    }
+
+    unsafeWindow.getPrude = exportFunction(getPrude, unsafeWindow);
+
+    self.port.on('_prude', function (prude) {
+        unsafeWindow._prude = cloneInto(prude, unsafeWindow, {
+            cloneFunctions: true,
+            wrapReflectors: true
+        });
+    });
+}
 
 // eof
 
