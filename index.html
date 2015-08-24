@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+    <script type="text/javascript">
+    console.log('script in head');
+    function funcInHead() {
+        console.log('funcInHead executed, DOM loaded');
+    }
+    </script>
+</head>
+<body onload="funcInHead();">
+    <h1>Some Title</h1>
+    <script type="text/javascript">
+    console.log('script in body');
+    </script>
+    <p>
+    Some content.
+    </p>
+
+    <script type="text/javascript">
+    console.log('script at the end of body');
+    </script>
+</body>
+</html>
