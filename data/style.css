@@ -1,0 +1,104 @@
+/* injected blocker style - ffxpopupblocker
+ * by @aravindanve
+ * http://github.com/aravindanve */
+
+.ffpopupblocker-control {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: 15px;
+    z-index: 9999;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.ffpopupblocker-control .count-bubble,
+.ffpopupblocker-control .message-bubble,
+.ffpopupblocker-control .toggle-bubble {
+    float: left;
+    padding-top: 5px;
+    padding-bottom: 3px;
+    margin-left: 4px;
+    font-family: sans-serif;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 14px;
+    color: #fff;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+.ffpopupblocker-control .count-bubble {
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: #f20;
+    border-color: #d20;
+}
+.ffpopupblocker-control .count-bubble.green {
+    background-color: #47D385;
+    border-color: #41C47C;
+}
+.ffpopupblocker-control .message-bubble-arrow {
+    float: left;
+    border-color: transparent #444 transparent transparent;
+    border-width: 6px;
+    border-style: solid;
+    margin-top: 6px;
+    margin-right: -6px;
+    margin-left: -4px;
+}
+.ffpopupblocker-control .message-bubble {
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #444;
+    border-color: #444;
+}
+.ffpopupblocker-control .toggle-bubble {
+    padding-left: 12px;
+    padding-right: 12px;
+    background-color: #2183FB;
+    border-color: #0A5AB8;
+}
+.ffpopupblocker-control .toggle-bubble.off {
+    background-color: #999;
+    border-color: #888;
+}
+.ffpopupblocker-control .help-text {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-top: -22px;
+    text-align: right;
+    font-family: sans-serif;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 12px;
+    padding: 3px 6px;
+    background-color: rgba(255,255,255,0.6);
+    border-radius: 3px;
+}
+.ffpopupblocker-control .count-bubble:hover ~ .help-text, 
+.ffpopupblocker-control .message-bubble:hover ~ .help-text, 
+.ffpopupblocker-control .toggle-bubble:hover ~ .help-text {
+    display: block;
+}
+.ffpopupblocker-control .count-bubble:hover ~ .help-text:after {
+    content: "show";
+}
+.ffpopupblocker-control .message-bubble:hover ~ .help-text:after {
+    content: "clear";
+}
+.ffpopupblocker-control .toggle-bubble:hover ~ .help-text:after {
+    content: "toggle";
+}
+.ffpopupblocker-control.hidemessage .count-bubble,
+.ffpopupblocker-control.hidemessage .message-bubble-arrow, 
+.ffpopupblocker-control.hidemessage .message-bubble {
+    display: none;
+}
