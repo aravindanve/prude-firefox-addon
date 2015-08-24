@@ -1,3 +1,7 @@
+// prude-firefox-addon
+// http://github.com/aravindanve
+// test-index.js
+
 var tabs = require('sdk/tabs');
 var main = require("../lib/prude");
 

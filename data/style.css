@@ -1,8 +1,8 @@
-/* injected blocker style - ffxpopupblocker
- * by @aravindanve
- * http://github.com/aravindanve */
+/* prude-firefox-addon
+// http://github.com/aravindanve
+// style.css */
 
-.ffpopupblocker-control {
+.prude-firefox-addon-control {
     position: fixed;
     bottom: 0;
     right: 0;
@@ -15,9 +15,9 @@
     -ms-user-select: none;
     user-select: none;
 }
-.ffpopupblocker-control .count-bubble,
-.ffpopupblocker-control .message-bubble,
-.ffpopupblocker-control .toggle-bubble {
+.prude-firefox-addon-control .count-bubble,
+.prude-firefox-addon-control .message-bubble,
+.prude-firefox-addon-control .toggle-bubble {
     float: left;
     padding-top: 5px;
     padding-bottom: 3px;
@@ -33,17 +33,17 @@
     border-radius: 20px;
     cursor: pointer;
 }
-.ffpopupblocker-control .count-bubble {
+.prude-firefox-addon-control .count-bubble {
     padding-left: 8px;
     padding-right: 8px;
     background-color: #f20;
     border-color: #d20;
 }
-.ffpopupblocker-control .count-bubble.green {
+.prude-firefox-addon-control .count-bubble.green {
     background-color: #47D385;
     border-color: #41C47C;
 }
-.ffpopupblocker-control .message-bubble-arrow {
+.prude-firefox-addon-control .message-bubble-arrow {
     float: left;
     border-color: transparent #444 transparent transparent;
     border-width: 6px;
@@ -52,23 +52,23 @@
     margin-right: -6px;
     margin-left: -4px;
 }
-.ffpopupblocker-control .message-bubble {
+.prude-firefox-addon-control .message-bubble {
     padding-left: 10px;
     padding-right: 10px;
     background-color: #444;
     border-color: #444;
 }
-.ffpopupblocker-control .toggle-bubble {
+.prude-firefox-addon-control .toggle-bubble {
     padding-left: 12px;
     padding-right: 12px;
     background-color: #2183FB;
     border-color: #0A5AB8;
 }
-.ffpopupblocker-control .toggle-bubble.off {
+.prude-firefox-addon-control .toggle-bubble.off {
     background-color: #999;
     border-color: #888;
 }
-.ffpopupblocker-control .help-text {
+.prude-firefox-addon-control .help-text {
     display: none;
     position: absolute;
     top: 0;
@@ -83,22 +83,22 @@
     background-color: rgba(255,255,255,0.6);
     border-radius: 3px;
 }
-.ffpopupblocker-control .count-bubble:hover ~ .help-text, 
-.ffpopupblocker-control .message-bubble:hover ~ .help-text, 
-.ffpopupblocker-control .toggle-bubble:hover ~ .help-text {
+.prude-firefox-addon-control .count-bubble:hover ~ .help-text, 
+.prude-firefox-addon-control .message-bubble:hover ~ .help-text, 
+.prude-firefox-addon-control .toggle-bubble:hover ~ .help-text {
     display: block;
 }
-.ffpopupblocker-control .count-bubble:hover ~ .help-text:after {
+.prude-firefox-addon-control .count-bubble:hover ~ .help-text:after {
     content: "show";
 }
-.ffpopupblocker-control .message-bubble:hover ~ .help-text:after {
+.prude-firefox-addon-control .message-bubble:hover ~ .help-text:after {
     content: "clear";
 }
-.ffpopupblocker-control .toggle-bubble:hover ~ .help-text:after {
+.prude-firefox-addon-control .toggle-bubble:hover ~ .help-text:after {
     content: "toggle";
 }
-.ffpopupblocker-control.hidemessage .count-bubble,
-.ffpopupblocker-control.hidemessage .message-bubble-arrow, 
-.ffpopupblocker-control.hidemessage .message-bubble {
+.prude-firefox-addon-control.hidemessage .count-bubble,
+.prude-firefox-addon-control.hidemessage .message-bubble-arrow, 
+.prude-firefox-addon-control.hidemessage .message-bubble {
     display: none;
 }
