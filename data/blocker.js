@@ -251,10 +251,11 @@ if (!inFrame) {
 // IMPORTANT, set to false in production mode
 var debug = true;
 
+// DEBUG FUNCTIONS
 if (debug) {
     // expose stack
     function getPrude() {
-        self.port.emit('_all');
+        self.port.emit('_debug');
     }
 
     unsafeWindow.getPrude = exportFunction(getPrude, unsafeWindow);

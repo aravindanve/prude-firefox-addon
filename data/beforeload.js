@@ -10,7 +10,7 @@ var tempOpen = function (context, original) {
     }
 }(unsafeWindow, unsafeWindow.open);
 
-unsafeWindow._open = exportFunction(unsafeWindow.open, unsafeWindow);
+// unsafeWindow.____open = exportFunction(unsafeWindow.open, unsafeWindow);
 unsafeWindow.open = exportFunction(tempOpen, unsafeWindow);
 
 
