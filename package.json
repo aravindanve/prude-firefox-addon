@@ -1,7 +1,7 @@
 {
   "title": "Prude Addon",
   "name": "prude-firefox-addon",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "A simple popup blocker",
   "main": "index.js",
   "author": "Aravindan Ve",
