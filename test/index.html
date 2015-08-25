@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+    <style type="text/css">
+    body {
+        background-color: #eee; 
+        font-family: sans-serif;
+        color: #222;
+    }
+    h1 {
+        margin: 40px 15px 20px;
+    }
+    p {
+        margin: 15px;
+    }
+    </style>
+    <script type="text/javascript">
+    window.open('', 'a1', 'height=500,width=800');
+    function funcOnload() {
+        window.open('', 'a4', 'height=500,width=800');
+    }
+    </script>
+</head>
+<body onload="funcOnload();">
+    <h1>This is a Test page</h1>
+    <script type="text/javascript">
+    window.open('', 'a2', 'height=500,width=800');
+    </script>
+    <p>
+    This page test fires five popups. One in &lt;head&gt;, two in &lt;body&gt;, and one on `body.onload` and the last one five seconds after scripts are excuted.
+    </p>
+
+    <script type="text/javascript">
+    window.open('', 'a3', 'height=500,width=800');
+    setTimeout(function () { 
+        window.open('', 'a5', 'height=500,width=800');
+    }, 5000);
+    </script>
+</body>
+</html>
