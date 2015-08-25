@@ -2,6 +2,11 @@
 // http://github.com/aravindanve
 // blocker.js
 
+// IMPORTANT, set to false in production mode
+var debug = true;
+
+
+// GUIDs
 var wGUID = {
     mul: 0x10000, // 65536
     mkrand: function () {
@@ -29,7 +34,17 @@ var wGUID = {
 };
 
 // get or set window id
-var GUID = wGUID.fetch(unsafeWindow);
+var GUID = null;
+
+try {
+    var GUID = wGUID.fetch(unsafeWindow);
+} catch (e) {
+    // usually ends up here on
+    // Permission denied to access property "name"
+    if (debug) {
+        dump(e + '\n');
+    }
+}
 
 // check if in iframe
 var inFrame = false,  
@@ -96,14 +111,22 @@ self.port.on('configure', function (options) {
     // get temp stack
     var tempStack = [];
 
-    if (('object' === typeof unsafeWindow.open._tempStack) &&
-        ('undefined' !== typeof unsafeWindow.open._tempStack.length)) {
-        for (var i = 0; i < unsafeWindow.open._tempStack.length; i++) {
-            tempStack.push({ 
-                'url': unsafeWindow.open._tempStack[i].url, 
-                'name': unsafeWindow.open._tempStack[i].name, 
-                'opts': unsafeWindow.open._tempStack[i].opts
-            });
+    try {
+        if (('object' === typeof unsafeWindow.open._tempStack) &&
+            ('undefined' !== typeof unsafeWindow.open._tempStack.length)) {
+            for (var i = 0; i < unsafeWindow.open._tempStack.length; i++) {
+                tempStack.push({ 
+                    'url': unsafeWindow.open._tempStack[i].url, 
+                    'name': unsafeWindow.open._tempStack[i].name, 
+                    'opts': unsafeWindow.open._tempStack[i].opts
+                });
+            }
+        }
+    } catch (e) {
+        // usually ends up here on
+        // Permission denied to access property "wrappedJSObject"
+        if (debug) {
+            dump(e + '\n');
         }
     }
 
@@ -113,13 +136,22 @@ self.port.on('configure', function (options) {
         inFrame: inFrame
     });
 
-    // export modified window.open
-    unsafeWindow.open = exportFunction(finalOpen, unsafeWindow);
 
-    // evaluate temp stack
-    for (var i = 0; i < tempStack.length; i++) {
-        unsafeWindow.open.call(unsafeWindow, 
-            tempStack[i].url, tempStack[i].name, tempStack[i].opts);
+    try {
+        // export modified window.open
+        unsafeWindow.open = exportFunction(finalOpen, unsafeWindow);
+
+        // evaluate temp stack
+        for (var i = 0; i < tempStack.length; i++) {
+            unsafeWindow.open.call(unsafeWindow, 
+                tempStack[i].url, tempStack[i].name, tempStack[i].opts);
+        }
+    } catch (e) {
+        // usually ends up here on
+        // Permission denied to access property "wrappedJSObject"
+        if (debug) {
+            dump(e + '\n');
+        }
     }
 });
 
@@ -146,6 +178,11 @@ var control = {
 self.port.on('counter', function (count) {
     // update control
     control.updateCounter(count);
+});
+
+// handle on worker detach
+self.port.on('detach', function () {
+    window.close();
 });
 
 // set up control -- only for top window
@@ -190,66 +227,71 @@ if (!inFrame) {
             self.port.emit('toggle', {_enabled: on});
         }
 
-        // create control
-        var prudeControl = document.createElement('div');
-        prudeControl.setAttribute('class', 'prude-firefox-addon-control');
-        prudeControl.innerHTML = '' +
-            '<span class="count-bubble"></span>' +
-            '<span class="message-bubble-arrow"></span>' +
-            '<span class="message-bubble"></span>' +
-            '<span class="toggle-bubble"></span>' + 
-            '<span class="help-text">click to&nbsp;</span>';
+        try {
+            // create control
+            var prudeControl = document.createElement('div');
+            prudeControl.setAttribute('class', 'prude-firefox-addon-control');
+            prudeControl.innerHTML = '' +
+                '<span class="count-bubble"></span>' +
+                '<span class="message-bubble-arrow"></span>' +
+                '<span class="message-bubble"></span>' +
+                '<span class="toggle-bubble"></span>' + 
+                '<span class="help-text">click to&nbsp;</span>';
 
-        // insert control
-        document.body.insertBefore(prudeControl, document.body.firstChild);
+            // insert control
+            document.body.insertBefore(prudeControl, document.body.firstChild);
 
-        var countBubble = null;
-        var messageBubble = null;
-        var toggleBubble = null;
+            var countBubble = null;
+            var messageBubble = null;
+            var toggleBubble = null;
 
-        var ch;
+            var ch;
 
-        if (prudeControl) {
-            for (ch = prudeControl.firstChild; ch; ch = ch.nextSibling) {
-                if (!ch.className) continue;
-                if (hasClass(ch, 'count-bubble')) {
-                    countBubble = ch;
-                } else if (hasClass(ch, 'message-bubble')) {
-                    messageBubble = ch;
-                } else if (hasClass(ch, 'toggle-bubble')) {
-                    toggleBubble = ch;
+            if (prudeControl) {
+                for (ch = prudeControl.firstChild; ch; ch = ch.nextSibling) {
+                    if (!ch.className) continue;
+                    if (hasClass(ch, 'count-bubble')) {
+                        countBubble = ch;
+                    } else if (hasClass(ch, 'message-bubble')) {
+                        messageBubble = ch;
+                    } else if (hasClass(ch, 'toggle-bubble')) {
+                        toggleBubble = ch;
+                    }
                 }
             }
-        }
 
-        if (countBubble && messageBubble && toggleBubble) {
-            countBubble.innerHTML = '0';
-            messageBubble.innerHTML = 'blocked';
-            toggleBubble.innerHTML = 'on';
+            if (countBubble && messageBubble && toggleBubble) {
+                countBubble.innerHTML = '0';
+                messageBubble.innerHTML = 'blocked';
+                toggleBubble.innerHTML = 'on';
 
-            // count color
-            addClass(countBubble, 'green');
+                // count color
+                addClass(countBubble, 'green');
 
-            // toggle button
-            toggleBubble.addEventListener('click', function (e) {
-                toggleButton(e.target);
-            });
+                // toggle button
+                toggleBubble.addEventListener('click', function (e) {
+                    toggleButton(e.target);
+                });
 
-            // replace updateCounter function
-            control.updateCounter = function (count) {
-                countBubble.innerHTML = count;
-                if (count) {
-                    removeClass(countBubble, 'green');
-                } else {
-                    addClass(countBubble, 'green');
-                }
-            };
+                // replace updateCounter function
+                control.updateCounter = function (count) {
+                    countBubble.innerHTML = count;
+                    if (count) {
+                        removeClass(countBubble, 'green');
+                    } else {
+                        addClass(countBubble, 'green');
+                    }
+                };
+            }
+        } catch (e) {
+            // usually ends up here on
+            // 
+            if (debug) {
+                dump(e + '\n');
+            }
         }
     })(document);
 }
-
-// IMPORTANT, set to false in production mode
-var debug = true;
 
 // DEBUG FUNCTIONS
 if (debug) {
