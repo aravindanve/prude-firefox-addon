@@ -72,7 +72,8 @@ var blockerInfo = {
     inFrame: inFrame
 };
 var blockerConf = {
-    _enabled: true
+    _enabled: true,
+    _count: 0
 };
 
 function isBlockerEnabled() {
@@ -107,6 +108,9 @@ var finalOpen = function (context, original) {
 
 // configure blocker
 self.port.on('configure', function (options) {
+    // import options
+    options = options || {_enabled: true};
+    blockerConf._enabled = options._enabled;
 
     // get temp stack
     var tempStack = [];
@@ -153,31 +157,40 @@ self.port.on('configure', function (options) {
             dump(e + '\n');
         }
     }
+
+    // set up control
+    if (!inFrame) {
+        setUpControl(document);
+    }
 });
 
 // update configuration
 self.port.on('update', function (options) {
-    var result = null;
     if (options._enabled) {
-        result = enableBlocker();
+        enableBlocker();
     } else {
-        result = disableBlocker();
+        disableBlocker();
     }
-
     // update control
-    if (!inFrame && (result != null)) {
-
-    }
+    control.updateToggle(isBlockerEnabled());
 });
 
 var control = {
-    updateCounter: function (count) {}
+    updateCounter: function (count) {},
+    updateToggle: function (on) {}
 };
 
 // update counter
 self.port.on('counter', function (count) {
+    blockerConf._count = count;
     // update control
     control.updateCounter(count);
+});
+
+// open single popup
+self.port.on('popup', function (popup) {
+    window.open.call(unsafeWindow, 
+        popup.url, popup.name, popup.opts);
 });
 
 // handle on worker detach
@@ -186,111 +199,144 @@ self.port.on('detach', function () {
 });
 
 // set up control -- only for top window
-if (!inFrame) {
-    (function (document) {
-        // helpers
-        function _escapeRegExp(string){
-            return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+function setUpControl(document) {
+    // helpers
+    function _escapeRegExp(string){
+        return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    }
+    function _getClassRegExp(cl) {
+        return new RegExp('\\b' + _escapeRegExp(cl) + '\\b', 'gi');
+    }
+    function hasClass(elem, cl) {
+        var re = _getClassRegExp(cl);
+        if (!elem.className) return false;
+        return elem.className.match(re) || false;
+    }
+    function addClass(elem, cl) {
+        if (!hasClass(elem, cl)) {
+            elem.className = elem.className + ' ' + cl;
         }
-        function _getClassRegExp(cl) {
-            return new RegExp('\\b' + _escapeRegExp(cl) + '\\b', 'gi');
-        }
-        function hasClass(elem, cl) {
-            var re = _getClassRegExp(cl);
-            if (!elem.className) return false;
-            return elem.className.match(re) || false;
-        }
-        function addClass(elem, cl) {
-            if (!hasClass(elem, cl)) {
-                elem.className = elem.className + ' ' + cl;
-            }
-        }
-        function removeClass(elem, cl) {
-            elem.className = elem.className.replace(
-                _getClassRegExp(cl), '');
-        }
-        function toggleButton(tglBtn, on) {
-            if ('undefined' === typeof on)  on = !isBlockerEnabled();
+    }
+    function removeClass(elem, cl) {
+        elem.className = elem.className.replace(
+            _getClassRegExp(cl), '');
+    }
+    function toggleButton(tglBtn, on) {
+        if ('undefined' === typeof on)  on = !isBlockerEnabled();
 
-            // toggle and update button class
-            if (on) {
-                enableBlocker();
-                removeClass(tglBtn, 'off');
-                tglBtn.innerHTML = 'on';
-            } else {
-                disableBlocker();
-                addClass(tglBtn, 'off');
-                tglBtn.innerHTML = 'off';
-            }
-
-            // update configuration across workers
-            self.port.emit('toggle', {_enabled: on});
+        // toggle and update button class
+        if (on) {
+            enableBlocker();
+            removeClass(tglBtn, 'off');
+            tglBtn.innerHTML = 'on';
+        } else {
+            disableBlocker();
+            addClass(tglBtn, 'off');
+            tglBtn.innerHTML = 'off';
         }
 
-        try {
-            // create control
-            var prudeControl = document.createElement('div');
-            prudeControl.setAttribute('class', 'prude-firefox-addon-control');
-            prudeControl.innerHTML = '' +
-                '<span class="count-bubble"></span>' +
-                '<span class="message-bubble-arrow"></span>' +
-                '<span class="message-bubble"></span>' +
-                '<span class="toggle-bubble"></span>' + 
-                '<span class="help-text">click to&nbsp;</span>';
+        // update configuration across workers
+        self.port.emit('toggle', {_enabled: on});
+    }
 
-            // insert control
-            document.body.insertBefore(prudeControl, document.body.firstChild);
+    try {
+        // create control
+        var prudeControl = document.createElement('div');
+        prudeControl.setAttribute('class', 'prude-firefox-addon-control');
+        prudeControl.innerHTML = '' +
+            '<span class="count-bubble"></span>' +
+            '<span class="message-bubble-arrow"></span>' +
+            '<span class="message-bubble"></span>' +
+            '<span class="toggle-bubble"></span>' + 
+            '<span class="help-text">click to&nbsp;</span>';
 
-            var countBubble = null;
-            var messageBubble = null;
-            var toggleBubble = null;
+        // insert control
+        document.body.insertBefore(prudeControl, document.body.firstChild);
 
-            var ch;
+        var countBubble = null;
+        var messageBubble = null;
+        var toggleBubble = null;
 
-            if (prudeControl) {
-                for (ch = prudeControl.firstChild; ch; ch = ch.nextSibling) {
-                    if (!ch.className) continue;
-                    if (hasClass(ch, 'count-bubble')) {
-                        countBubble = ch;
-                    } else if (hasClass(ch, 'message-bubble')) {
-                        messageBubble = ch;
-                    } else if (hasClass(ch, 'toggle-bubble')) {
-                        toggleBubble = ch;
-                    }
+        var ch;
+
+        if (prudeControl) {
+            for (ch = prudeControl.firstChild; ch; ch = ch.nextSibling) {
+                if (!ch.className) continue;
+                if (hasClass(ch, 'count-bubble')) {
+                    countBubble = ch;
+                } else if (hasClass(ch, 'message-bubble')) {
+                    messageBubble = ch;
+                } else if (hasClass(ch, 'toggle-bubble')) {
+                    toggleBubble = ch;
                 }
             }
+        }
 
-            if (countBubble && messageBubble && toggleBubble) {
-                countBubble.innerHTML = '0';
-                messageBubble.innerHTML = 'blocked';
-                toggleBubble.innerHTML = 'on';
-
-                // count color
+        if (countBubble && messageBubble && toggleBubble) {
+            // configure count-bubble
+            countBubble.innerHTML = blockerConf._count;
+            if (blockerConf._count) {
+                removeClass(countBubble, 'green');
+            } else {
                 addClass(countBubble, 'green');
-
-                // toggle button
-                toggleBubble.addEventListener('click', function (e) {
-                    toggleButton(e.target);
-                });
-
-                // replace updateCounter function
-                control.updateCounter = function (count) {
-                    countBubble.innerHTML = count;
-                    if (count) {
-                        removeClass(countBubble, 'green');
-                    } else {
-                        addClass(countBubble, 'green');
-                    }
-                };
             }
-        } catch (e) {
-            // usually ends up here on
-            // 
-            if (debug) {
-                dump(e + '\n');
+
+            // configure message-bubble
+            messageBubble.innerHTML = 'blocked';
+
+            // configure toggle-bubble
+            if (blockerConf._enabled) {
+                removeClass(toggleBubble, 'off');
+                toggleBubble.innerHTML = 'on';
+            } else {
+                addClass(toggleBubble, 'off');
+                toggleBubble.innerHTML = 'off';
+            }
+
+            // toggle button
+            toggleBubble.addEventListener('click', function (e) {
+                toggleButton(e.target);
+            });
+
+            // clear all button
+            messageBubble.addEventListener('click', function (e) {
+                self.port.emit('clear');
+            });
+
+            // open most recent button
+            countBubble.addEventListener('click', function (e) {
+                self.port.emit('popstack');
+            });
+
+            // replace updateCounter function
+            control.updateCounter = function (count) {
+                countBubble.innerHTML = count;
+                if (count) {
+                    removeClass(countBubble, 'green');
+                } else {
+                    addClass(countBubble, 'green');
+                }
+            };
+
+            // replace updateToggle function
+            control.updateToggle = function (on) {
+                // update button class
+                if (on) {
+                    removeClass(toggleBubble, 'off');
+                    toggleBubble.innerHTML = 'on';
+                } else {
+                    addClass(toggleBubble, 'off');
+                    toggleBubble.innerHTML = 'off';
+                }
             }
         }
-    })(document);
+    } catch (e) {
+        // usually ends up here on
+        // document.body not found
+        if (debug) {
+            dump(e + '\n');
+        }
+    }
 }
 
 // DEBUG FUNCTIONS
